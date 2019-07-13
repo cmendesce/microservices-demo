@@ -1,17 +1,20 @@
----
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rabbitmq
   labels:
-    name: rabbitmq
-  namespace: sock-shop
+    app: rabbitmq
+    version: v1
 spec:
-  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+      version: v1
   template:
     metadata:
       labels:
-        name: rabbitmq
+        app: rabbitmq
+        version: v1
       annotations:
         prometheus.io/scrape: "false"
     spec:
@@ -23,20 +26,7 @@ spec:
           name: management
         - containerPort: 5672
           name: rabbitmq
-        securityContext:
-          capabilities:
-            drop:
-              - all
-            add:
-              - CHOWN
-              - SETGID
-              - SETUID
-              - DAC_OVERRIDE
-          readOnlyRootFilesystem: true
       - name: rabbitmq-exporter
         image: kbudde/rabbitmq-exporter
         ports:
         - containerPort: 9090
-          name: exporter
-      nodeSelector:
-        beta.kubernetes.io/os: linux

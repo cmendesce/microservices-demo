@@ -1,17 +1,20 @@
----
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: catalogue-db
   labels:
-    name: catalogue-db
-  namespace: sock-shop
+    app: catalogue-db
+    version: v1
 spec:
-  replicas: 1
+  selector:
+    matchLabels:
+      app: catalogue-db
+      version: v1
   template:
     metadata:
       labels:
-        name: catalogue-db
+        app: catalogue-db
+        version: v1
     spec:
       containers:
       - name: catalogue-db
@@ -22,7 +25,4 @@ spec:
           - name: MYSQL_DATABASE
             value: socksdb
         ports:
-        - name: mysql
-          containerPort: 3306
-      nodeSelector:
-        beta.kubernetes.io/os: linux
+        - containerPort: 3306
