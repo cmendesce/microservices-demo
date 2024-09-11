@@ -24,7 +24,7 @@ COPY . .
 # Skaffold passes in debug-oriented compiler flags
 ARG SKAFFOLD_GO_GCFLAGS
 RUN CGO_ENABLED=0 GOOS=linux go build -gcflags="${SKAFFOLD_GO_GCFLAGS}" -o /checkoutservice .
-
+COPY service-config.json /src/checkoutservice
 FROM scratch
 
 WORKDIR /src
