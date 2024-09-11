@@ -20,16 +20,18 @@ on:
       - main
 jobs:
   push-deploy:
-    runs-on: [self-hosted, is-enabled]
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Push latest images to GCR
-      timeout-minutes: 20
-      run: |
-        skaffold config set --global local-cluster false
-        yes | gcloud auth configure-docker us-docker.pkg.dev
-        # tag with git hash
-        skaffold build --default-repo=us-docker.pkg.dev/$PROJECT_ID \
-                       --tag=$GITHUB_SHA
-      env:
-        PROJECT_ID: "online-boutique-ci"
+    - name: Log in to the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Push latest images to GHCR
+      uses: hiberbee/github-action-skaffold@1.19.0
+      with:
+        command: build
+        repository: ghcr.io/${{ github.repository }}
+        tag: ${{ github.sha }}
