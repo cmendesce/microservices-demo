@@ -32,6 +32,7 @@ jobs:
     - name: Push latest images to GHCR
       uses: hiberbee/github-action-skaffold@1.19.0
       with:
+        skaffold-version: 2.13.2
         command: build
         repository: ghcr.io/${{ github.repository }}
         tag: ${{ github.sha }}
