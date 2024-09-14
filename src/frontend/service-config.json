@@ -5,8 +5,8 @@
         { "service": "", "method": "" }
       ],
       "retryPolicy": {
-        "maxAttempts": 2,
-        "initialBackoff": "0.1s",
+        "maxAttempts": 3,
+        "initialBackoff": "2s",
         "maxBackoff": "10s",
         "backoffMultiplier": 2,
         "retryableStatusCodes": [
