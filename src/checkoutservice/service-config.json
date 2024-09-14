@@ -1,12 +1,20 @@
 {
-  "retryPolicy": {
-    "maxAttempts": 5,
-    "initialBackoff": "0.1s",
-    "maxBackoff": "1s",
-    "backoffMultiplier": 2.0,
-    "retryableStatusCodes": [
-      "UNAVAILABLE",
-      "RESOURCE_EXHAUSTED"
-    ]
-  }
+  "methodConfig": [
+    {
+      "name": [
+        { "service": "", "method": "" }
+      ],
+      "retryPolicy": {
+        "maxAttempts": 5,
+        "initialBackoff": "0.1s",
+        "maxBackoff": "10s",
+        "backoffMultiplier": 2,
+        "retryableStatusCodes": [
+          "503",
+          "504"
+        ]
+      },
+      "waitForReady": true
+    }
+  ]
 }
