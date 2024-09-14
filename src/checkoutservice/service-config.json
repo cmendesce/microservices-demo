@@ -10,8 +10,7 @@
         "maxBackoff": "10s",
         "backoffMultiplier": 2,
         "retryableStatusCodes": [
-          "503",
-          "504"
+          "UNAVAILABLE"
         ]
       },
       "waitForReady": true
