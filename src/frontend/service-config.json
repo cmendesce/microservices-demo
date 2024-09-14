@@ -5,7 +5,7 @@
         { "service": "", "method": "" }
       ],
       "retryPolicy": {
-        "maxAttempts": 5,
+        "maxAttempts": 2,
         "initialBackoff": "0.1s",
         "maxBackoff": "10s",
         "backoffMultiplier": 2,
