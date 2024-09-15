@@ -28,29 +28,45 @@ func BuildServiceConfig() string {
 	maxBackoff := GetEnv("GRPC_MAX_BACKOFF", "")
 	backoffMultiplier, backoffMultiplierOk := GetEnvInt("GRPC_BACKOFF_MULTIPLIER")
 
-	if !maxAttemptsOk || initialBackoff == "" || maxBackoff == "" || !backoffMultiplierOk {
+	hedgingMaxAttempts := GetEnv("GRPC_HEDGING_MAX_ATTEMPTS", "")
+	hedgingDelay := GetEnv("GRPC_HEDGING_DELAY", "")
+
+	if maxAttemptsOk && backoffMultiplierOk && initialBackoff != "" && maxBackoff != "" {
+		return fmt.Sprintf(`{
+			"methodConfig": [
+				{
+					"name": [
+						{ "service": "", "method": "" }
+					],
+					"retryPolicy": {
+						"maxAttempts": %d,
+						"initialBackoff": "%s",
+						"maxBackoff": "%s",
+						"backoffMultiplier": %d,
+						"retryableStatusCodes": [
+							"UNAVAILABLE"
+						]
+					},
+					"waitForReady": true
+				}
+			]
+		}`, maxAttempts, initialBackoff, maxBackoff, backoffMultiplier)
+	} else if hedgingMaxAttempts != "" && hedgingDelay != "" {
+		return fmt.Sprintf(`{
+			"methodConfig": [
+				{
+					"name": [
+						{ "service": "", "method": "" }
+					],
+					"hedgingPolicy": {
+						"maxAttempts": %d,
+						"hedgingDelay": "%s",
+					},
+					"waitForReady": true
+				}
+			]
+		}`, hedgingMaxAttempts, hedgingDelay)
+	} else {
 		return ""
 	}
-
-	serviceConfig := fmt.Sprintf(`{
-		"methodConfig": [
-			{
-				"name": [
-					{ "service": "", "method": "" }
-				],
-				"retryPolicy": {
-					"maxAttempts": %d,
-					"initialBackoff": "%s",
-					"maxBackoff": "%s",
-					"backoffMultiplier": %d,
-					"retryableStatusCodes": [
-						"UNAVAILABLE"
-					]
-				},
-				"waitForReady": true
-			}
-		]
-	}`, maxAttempts, initialBackoff, maxBackoff, backoffMultiplier)
-
-	return serviceConfig
 }

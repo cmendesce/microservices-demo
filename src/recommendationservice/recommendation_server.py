@@ -70,23 +70,36 @@ def create_service_config():
     max_backoff = os.getenv("GRPC_MAX_BACKOFF")
     backoff_multiplier = os.getenv("GRPC_BACKOFF_MULTIPLIER")
     retryable_status_codes = os.getenv("GRPC_RETRYABLE_STATUS_CODES")
-    service_name = os.getenv("GRPC_SERVICE_NAME")
+    hedging_max_attempts = os.getenv("GRPC_HEDGING_MAX_ATTEMPTS")
+    hedging_delay = os.getenv("GRPC_HEDGING_DELAY")
 
-    if not all([max_attempts, initial_backoff, max_backoff, backoff_multiplier, retryable_status_codes, service_name]):
-        return ""
-
-    return {
-        "methodConfig": [{
-            "name": [{"service": service_name}],
-            "retryPolicy": {
-                "maxAttempts": int(max_attempts),
-                "initialBackoff": initial_backoff,
-                "maxBackoff": max_backoff,
-                "backoffMultiplier": float(backoff_multiplier),
-                "retryableStatusCodes": retryable_status_codes.split(',')
-            }
-        }]
-    }
+    if all([max_attempts, initial_backoff, max_backoff, backoff_multiplier, retryable_status_codes]):
+      return {
+          "methodConfig": [{
+              "name": [{ "service": "", "method": "" }],
+              "retryPolicy": {
+                  "maxAttempts": int(max_attempts),
+                  "initialBackoff": initial_backoff,
+                  "maxBackoff": max_backoff,
+                  "backoffMultiplier": float(backoff_multiplier),
+                  "retryableStatusCodes": retryable_status_codes.split(',')
+              },
+              "waitForReady": True
+          }]
+      }
+    elif all([hedging_max_attempts, hedging_delay]):
+      return {
+          "methodConfig": [{
+              "name": [{ "service": "", "method": "" }],
+              "hedgingPolicy": {
+                  "maxAttempts": int(hedging_max_attempts),
+                  "hedgingDelay": hedging_delay
+              },
+              "waitForReady": True
+          }]
+      }
+    else:
+      return ""
 
 class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
     def ListRecommendations(self, request, context):
