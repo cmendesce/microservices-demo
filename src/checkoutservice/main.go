@@ -210,17 +210,20 @@ func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
 
-	serviceConfig, err := os.ReadFile("service-config.json")
-	if err != nil {
-		panic(errors.Wrap(err, "failed to read service config file"))
-	}
-
-	*conn, err = grpc.DialContext(ctx, addr,
+	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
-		grpc.WithDefaultServiceConfig(string(serviceConfig)),
-	)
+	}
+
+	serviceConfig := BuildServiceConfig()
+	if serviceConfig != "" {
+		opts = append(opts, grpc.WithDefaultServiceConfig(serviceConfig))
+	} else {
+		log.Warn("service config not provided, proceeding with default settings")
+	}
+
+	*conn, err = grpc.DialContext(ctx, addr, opts...)
 	if err != nil {
 		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
 	}
