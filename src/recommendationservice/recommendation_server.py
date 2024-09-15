@@ -18,6 +18,7 @@ import os
 import random
 import time
 import traceback
+import json
 from concurrent import futures
 
 import googlecloudprofiler
@@ -62,6 +63,30 @@ def initStackdriverProfiling():
       else:
         logger.warning("Could not initialize Stackdriver Profiler after retrying, giving up")
   return
+
+def create_service_config():
+    max_attempts = os.getenv("GRPC_MAX_ATTEMPTS")
+    initial_backoff = os.getenv("GRPC_INITIAL_BACKOFF")
+    max_backoff = os.getenv("GRPC_MAX_BACKOFF")
+    backoff_multiplier = os.getenv("GRPC_BACKOFF_MULTIPLIER")
+    retryable_status_codes = os.getenv("GRPC_RETRYABLE_STATUS_CODES")
+    service_name = os.getenv("GRPC_SERVICE_NAME")
+
+    if not all([max_attempts, initial_backoff, max_backoff, backoff_multiplier, retryable_status_codes, service_name]):
+        return ""
+
+    return {
+        "methodConfig": [{
+            "name": [{"service": service_name}],
+            "retryPolicy": {
+                "maxAttempts": int(max_attempts),
+                "initialBackoff": initial_backoff,
+                "maxBackoff": max_backoff,
+                "backoffMultiplier": float(backoff_multiplier),
+                "retryableStatusCodes": retryable_status_codes.split(',')
+            }
+        }]
+    }
 
 class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
     def ListRecommendations(self, request, context):
@@ -129,6 +154,21 @@ if __name__ == "__main__":
     if catalog_addr == "":
         raise Exception('PRODUCT_CATALOG_SERVICE_ADDR environment variable not set')
     logger.info("product catalog address: " + catalog_addr)
+
+    retry_policy = create_service_config()
+
+    if retry_policy == "":
+        channel = grpc.insecure_channel(catalog_addr)
+        logger.info("service config not set")
+    else:
+        channel = grpc.insecure_channel(
+            catalog_addr,
+            options=[
+                ('grpc.service_config', json.dumps(retry_policy))
+            ]
+        )
+        logger.info(f"using service config {retry_policy}")
+
     channel = grpc.insecure_channel(catalog_addr)
     product_catalog_stub = demo_pb2_grpc.ProductCatalogServiceStub(channel)
 
