@@ -22,11 +22,19 @@ func GetEnvInt(key string) (int, bool) {
 	return 0, false
 }
 
+func GetEnvFloat(key string) (float64, bool) {
+	valueStr := os.Getenv(key)
+	if value, err := strconv.ParseFloat(valueStr, 64); err == nil {
+		return value, true
+	}
+	return 0.0, false
+}
+
 func BuildServiceConfig() string {
 	maxAttempts, maxAttemptsOk := GetEnvInt("GRPC_MAX_ATTEMPTS")
 	initialBackoff := GetEnv("GRPC_INITIAL_BACKOFF", "")
 	maxBackoff := GetEnv("GRPC_MAX_BACKOFF", "")
-	backoffMultiplier, backoffMultiplierOk := GetEnvInt("GRPC_BACKOFF_MULTIPLIER")
+	backoffMultiplier, backoffMultiplierOk := GetEnvFloat("GRPC_BACKOFF_MULTIPLIER")
 
 	hedgingMaxAttempts := GetEnv("GRPC_HEDGING_MAX_ATTEMPTS", "")
 	hedgingDelay := GetEnv("GRPC_HEDGING_DELAY", "")
@@ -39,15 +47,12 @@ func BuildServiceConfig() string {
 						{ "service": "", "method": "" }
 					],
 					"retryPolicy": {
-						"maxAttempts": %d,
-						"initialBackoff": "%s",
-						"maxBackoff": "%s",
-						"backoffMultiplier": %d,
-						"retryableStatusCodes": [
-							"UNAVAILABLE"
-						]
-					},
-					"waitForReady": true
+						"MaxAttempts": %d,
+						"InitialBackoff": "%s",
+						"MaxBackoff": "%s",
+						"BackoffMultiplier": %d,
+						"RetryableStatusCodes": [ "UNAVAILABLE" ]
+					}
 				}
 			]
 		}`, maxAttempts, initialBackoff, maxBackoff, backoffMultiplier)
@@ -59,10 +64,9 @@ func BuildServiceConfig() string {
 						{ "service": "", "method": "" }
 					],
 					"hedgingPolicy": {
-						"maxAttempts": %d,
-						"hedgingDelay": "%s",
-					},
-					"waitForReady": true
+						"MaxAttempts": %d,
+						"HedgingDelay": "%s",
+					}
 				}
 			]
 		}`, hedgingMaxAttempts, hedgingDelay)
