@@ -50,7 +50,7 @@ func BuildServiceConfig() string {
 						"MaxAttempts": %d,
 						"InitialBackoff": "%s",
 						"MaxBackoff": "%s",
-						"BackoffMultiplier": %d,
+						"BackoffMultiplier": %f,
 						"RetryableStatusCodes": [ "UNAVAILABLE" ]
 					}
 				}
